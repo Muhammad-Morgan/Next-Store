@@ -119,8 +119,6 @@ This pattern keeps one shared Prisma client (a “singleton”) across reloads, 
 
     - Update Record
 
-    ```js
-
     const updateTask = await prisma.task.update({
     where: {
         id: id,
@@ -129,11 +127,9 @@ This pattern keeps one shared Prisma client (a “singleton”) across reloads, 
         content: 'updated task',
     },
     });
-    ```
 
     - Update or create records
 
-    ```js
     const upsertTask = await prisma.task.upsert({
     where: {
         id: id,
@@ -264,7 +260,7 @@ export const formatCurrency = (amount: number | null) => {
 26- SetUp (About Page)
 27- Setup Suspense component inside the HomePage and add Loading component.
 
-```
+```ts
 28- SetUp ProductsPage and adding to its props: {
 searchParams,
 }: {
@@ -312,6 +308,44 @@ We won't be able to deploy the project.
 38- SetUp Toaster component and add it to the Global Provider.
 39- Clerk Authentication.
 
+- create app.
+- npm install clerk/nextjs.
+- add to .env.local
+  NOTE: variables in NEXT_PUBLIC.. are avail on frontend
+- Wrap the entire app "NOT PROVIDER FILE" it's "layout.tsx" with clerk provider
+- Setup middleware file in the root and add the code from clerk's docs:
+  Public ones here: home,products,products/singleproduct,about
+
+```ts
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+
+const isPublic = createRouteMatcher(["/", "/products(.*)", "/about"]);
+// Here we identified the public routes (The ones that doesn't need authentication)
+export default clerkMiddleware((auth, req) => {
+  if (!isPublic(req)) {
+    auth().protect();
+  }
+});
+// We export the middleware function that will check if the route isn't public and then apply protection to it.
+export const config = {
+  matcher: [
+    // Skip Next.js internals and all static files, unless found in search params
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    // Always run for API routes
+    "/(api|trpc)(.*)",
+  ],
+};
+```
+
+40- SetUp SignOutLink Component.
+41- SetUp UserIcon.
+
+```ts
+import { currentUser } from "@/clerk/nextjs/server";
+```
+
+42- Complete LinksDropdown
+
 # Supbase Bug:
 
 Some students have reported that their Supabase connection works locally, but once the project is deployed on Vercel, they encounter an error.
@@ -325,4 +359,5 @@ How our Pages are being rendered andy why:
 3- We Have a Global Provider component which is set to CSR because we have "ThemeProvider coming from next-themes" which relies on browser APIs like; matchMedia, loacalStorage and React Hooks. That library must run on the client side.
 4- For loading.tsx -- loading.tsx is a React component that runs immediately in the browser while the server component is still fetching / rendering.
 5- In client component we use useSearchParams hook. In SSR we use {searchParams} right away as a prop.
-6- We switched to CSR for the NavSearch component because we need React Hoos and other APIs
+6- We switched to CSR for the NavSearch component because we need React Hoos and other APIs.
+7- SignOutLink component will be CSR because it uses browser API and Web Hooks.
