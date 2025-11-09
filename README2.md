@@ -306,6 +306,11 @@ We won't be able to deploy the project.
 37- Deploy on vercel (Best Experience)
 
 - Push the project to Git repo
+- Update package.json
+  "build": "npx prisma generate && next build",
+
+38- SetUp Toaster component and add it to the Global Provider.
+39- Clerk Authentication.
 
 # Supbase Bug:
 
