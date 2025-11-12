@@ -16,6 +16,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Next Store",
   description: "A nifty store built with Next.js",
+  icons: "",
 };
 // Setting title and meta data
 export default function RootLayout({
