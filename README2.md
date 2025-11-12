@@ -345,6 +345,256 @@ import { currentUser } from "@/clerk/nextjs/server";
 ```
 
 42- Complete LinksDropdown
+43- Admin pages
+
+```ts
+export const links: NavLink[] = [
+  { href: "/", label: "home" },
+  { href: "/about", label: "about" },
+  { href: "/products", label: "products" },
+  { href: "/favorites", label: "favorites" },
+  { href: "/cart", label: "cart" },
+  { href: "/orders", label: "orders" },
+  // We added this
+  { href: "/admin/sales", label: "dashboard" },
+];
+// And that
+export const adminLinks: NavLink[] = [
+  { href: "/admin/sales", label: "sales" },
+  { href: "/admin/products", label: "my products" },
+  { href: "/admin/products/create", label: "create products" },
+];
+```
+
+- remove existing page.tsx
+
+- admin
+  - products
+    - [id]/edit/page.tsx
+    - create/page.tsx
+    - page.tsx
+  - sales/page.tsx
+  - layout.tsx
+  - Sidebar.tsx
+
+44- SetUp Sidebar.tsx
+45- SetUp the shared layout aka layout.tsx.
+46- Resteric Access to Admin pages.
+
+- Only Admin user can access.
+- First thing we need is userID
+
+47- Create Product Functionallity - Admin
+48- Install Faker Library:
+
+```sh
+npm install @faker-js/faker --save-dev
+```
+
+49- SetUp FormInput component.
+[Docs](https://fakerjs.dev/guide/)
+
+50- SetUp the Form components:
+
+- components/form
+  - Buttons
+  - CheckBoxInput
+  - FormContainer
+  - FormInput
+  - ImageInput
+  - ImageInputContainer
+  - PriceInput
+  - TextAreaInput
+
+51- createProductAction Functionallity.
+
+- lots of code code just to access input values
+- no validation (only html one)
+
+52- Zod - We want to be more specific about input details. use functions that are reliable.
+Zod is a JavaScript library for building schemas and validating data, providing type safety and error handling.
+
+```sh
+npm install zod
+```
+
+- Create validation schema file.
+- Create the schema, and in the same file we can implement validation methods and export all that.
+- validate the image.
+- Upload image on supabase:
+  1st: Go to the website: https://supabase.com/dashboard/project/vxzxjnxougyyecntbgwa/storage/files
+  2nd create a storage bucket - set it to be public and enable the policy for insertion.
+  set env variables
+  SUPABASE_URL and SUPABASE_KEY
+- SetUp Supabase
+
+```sh
+npm install @supabase/supabase-js
+```
+
+- provide method to upload to supabase
+- create utils/supabase.ts
+- add the bucket name to create instance - provide 2 env vars and they can be undefined.
+- Create a single supabase client for interacting with your database
+- Set the upload Image function
+- Using time stamp and image name to set the name of this image name.
+- check if no file throw an error
+- if there is, then we upload to supabase.
+
+```ts
+import { createClient } from "@supabase/supabase-js";
+
+// add the bucket name to create instance.
+const bucket = "main-bucket";
+// Create a single supabase client for interacting with your database
+// provide 2 env vars and be aware, they can be undefined.
+export const supabase = createClient(
+  process.env.SUPABASE_URL as string,
+  process.env.SUPABASE_KEY as string
+);
+// Set the upload Image function
+export const uploadImage = async (image: File) => {
+  const timeStamp = Date.now();
+  // Using time stamp and image name to set the name of this image name
+  const newName = `${timeStamp}-${image.name}`;
+  const { data } = await supabase.storage
+    .from(bucket)
+    .upload(newName, image, { cacheControl: "3600" });
+  if (!data) throw new Error("Image upload failed");
+  return supabase.storage.from(bucket).getPublicUrl(newName).data.publicUrl;
+};
+```
+
+- Then add the url to remote domain list in next.config.mjs
+
+53- Fetching Admin Data - My Products Page.
+54- SetUp the actions column.
+We set up icon button. We will store form container to communicate with DB. We need submit btn but a small one.
+55- Setup deleteProduct function in actions.ts
+56- complete AdminProducts
+57- Remove Old image from Supabase
+
+- When deleting item, the image on supabase stays, so we need to delete it.
+
+58- Edit Product:
+
+- Setup fetchAdminProductDetails
+- Setup updateProductAction
+- Setup the page
+- SetUp Image container
+
+59- SetUp LoadingTable component in components/global.
+60- SetUp the loading in the products page and import LoadingTable.
+
+61- SetUp Favorite Model
+
+- Start by setting the Model with Prisma.
+- We need to set a relation (1 to many).
+- A product can have a multiple favorite.
+- When we create the favorite instance it will be with 1 product only.
+- Only Logged in users can add or remove from Favorites.
+- A botton to be displayed if the item is already in the favorites.
+
+```prisma
+model Product {
+favorites Favorite[]
+}
+
+model Favorite {
+id        String   @id @default(uuid())
+clerkId  String
+product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+productId String
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+}
+```
+
+```sh
+npx prisma db push
+```
+
+62- SetUp Favorite page.
+63- Share Functionality - React Share Library
+
+- Project need to be deployed.
+- Grab production URL. Add it to env.
+- Create component in single-product components page.
+- Display it in the single product page
+- Then finish the ShareButton.tsx
+
+64- Review Functionallity.
+65- In singleproduct we need to be able to leave a review.
+
+- We will complete product raiting component that was hardcoded.
+- We will restric access to submit review button by checking if the user has a review or didn't log in.
+- I need to access the name and image to add them next to their review.
+- Go to components/reviews, and create:
+
+  - RatingInput.tsx
+  - Comment.tsx
+  - ProductReviews.tsx
+  - Rating.tsx
+  - ReviewCard.tsx
+  - SubmitReview.tsx
+
+- Create SubmitReview where we have toggle functionality.
+- ProductReviews - Fetching all reviews and display card for each review with img,name,rating,comment.
+- Add the reviews cards into the SingleProduct.
+- Add the dynamic rating to SingleProduct.
+
+66- SetUp the Reviews Page.
+
+- Start by setting the fetchProductReviewsByUser action.
+- Create Reviews Page
+- Fetch User Reviews and Delete Review Action
+- Resterict Submit Button for user who already left a review. Or, user who hasn't logged in.
+
+67- SetUp Cart and CartItem Models:
+
+```prisma
+model Product{
+cartItems CartItem[]
+}
+model Cart {
+  id        String   @id @default(uuid())
+  clerkId  String
+  cartItems CartItem[]
+  numItemsInCart Int @default(0)
+  cartTotal Int @default(0)
+  shipping Int @default(5)
+  tax Int @default(0)
+  taxRate Float @default(0.1)
+  orderTotal Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  cart     Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  cartId   String
+  amount  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+```
+
+- cartItem is connected to product as admin can update the product. Always wanna display latest value. Also connected to a cart. So when Admin changes something, it will be updated in the usercart
+- Start with fetchCartItems.
+- Display number of items
+
+67 - Select Product Amount Component, and a product sign in button, so only the signed in user can see the button.
+
+- Start with creating ProductSignInButtong in Buttons.tsx.
+- Only logged in user can add to cart
+- In the SelectProductAmount, we are using 2 different types + an enum with 2 modes so our component to be rendered in 2 different locations and using those will result in rendering the component conditionally and with half the amount of code expected using TS logic.
+- SetUp addToCartButton and strict access.
+- SetUp addToCart action.
+
+68- SetUp Cart Page
 
 # Supbase Bug:
 
@@ -361,3 +611,40 @@ How our Pages are being rendered andy why:
 5- In client component we use useSearchParams hook. In SSR we use {searchParams} right away as a prop.
 6- We switched to CSR for the NavSearch component because we need React Hoos and other APIs.
 7- SignOutLink component will be CSR because it uses browser API and Web Hooks.
+8- Pages without any requests were static which means Next doesn't build them everytime we go there but after we added clerk auth all the pages became dynamic.
+9- Sidebar Component is CSR because we need to invoke the usePathname hook
+10- Inside a server page, if some components from shadcn or so where added into the return and an action need to take place in the form then the action function should be exposed as use server, so Next JS can handle it otherwise a nice error will be logged.
+11- FormContainer to be reused in multiple places where we will communicate with DB, and since we want better user experience, this will be rendered on the Client Side.
+12- A general rule for form components that are coming from shadcn. If the component uses browser hooks or API then it should run on the Client side to be more interavtive with user.
+13- Another rule. if a function in actions.ts is going to call action function from a client component, then again we need to expose the function as "use server"
+
+```ts
+export async function action(prevState: any, formData: FormData) {
+  // prisma stuff
+}
+```
+
+14- Accessing properties from prisma
+
+```ts
+import { Prisma } from "@/prisma/client";
+const prop = Prisma.ProductsScalarFireldEnum.prop;
+```
+
+15- next.config.mjs file
+You are allowing Next/Image component to load images from specific remote domains, by setting the protocol and the host name.
+
+## 16 - A VERY IMPORTANT ASPECT:
+
+So our product item schema is consisted of: {id: string;
+name: string;
+company: string;
+description: string;
+featured: boolean;
+image: string;
+price: number;
+createdAt: Date;
+updatedAt: Date;
+clerkId: string;}
+Prisma by default creates an auto unique ID for each product. However, the clerkId is given only to the ADMIN!!!
+17- If we have a combination of SSR and CSR components in 1 page they might be out of sync, and hence we might need to unify based on the situation.

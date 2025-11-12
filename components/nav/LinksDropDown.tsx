@@ -12,7 +12,10 @@ import UserIcon from "./UserIcon";
 import { SignedOut, SignedIn, SignInButton, SignUpButton } from "@clerk/nextjs";
 import { DropdownMenuSeparator } from "@radix-ui/react-dropdown-menu";
 import SignOutLink from "./SignOutLink";
+import { auth } from "@clerk/nextjs/server";
 const LinksDropDown = () => {
+  const { userId } = auth();
+  const isAdmin = userId === process.env.ADMIN_USER_ID;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -28,13 +31,13 @@ const LinksDropDown = () => {
         <SignedOut>
           <DropdownMenuItem>
             <SignInButton mode="modal">
-              <button className="w-full text-left">Sign Up</button>
+              <button className="w-full text-left">Login</button>
             </SignInButton>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem>
             <SignUpButton mode="modal">
-              <button className="w-full text-left">Login</button>
+              <button className="w-full text-left">Sign Up</button>
             </SignUpButton>
           </DropdownMenuItem>
         </SignedOut>
@@ -42,6 +45,7 @@ const LinksDropDown = () => {
         <SignedIn>
           {links.map((link) => {
             const { href, label } = link;
+            if (link.label === "dashboard" && !isAdmin) return null;
             return (
               <DropdownMenuItem asChild key={label}>
                 <Link
