@@ -34,9 +34,6 @@ const renderError = (error: unknown): { message: string } => {
 };
 // Fetch with UNIQUE IDENTFIER
 export const fetchFeaturedProducts = async () => {
-  const user = await getAuthUser();
-  console.log(process.env.ADMIN_USER_ID, user.id);
-
   const featuredProducts = await prisma.product.findMany({
     where: {
       featured: true,
