@@ -21,6 +21,7 @@ const getAuthUser = async () => {
 const getAdminUser = async () => {
   const user = await getAuthUser();
   if (user.id !== process.env.ADMIN_USER_ID) redirect("/");
+
   return user;
 };
 // 2nd helper function
@@ -33,6 +34,9 @@ const renderError = (error: unknown): { message: string } => {
 };
 // Fetch with UNIQUE IDENTFIER
 export const fetchFeaturedProducts = async () => {
+  const user = await getAuthUser();
+  console.log(process.env.ADMIN_USER_ID, user.id);
+
   const featuredProducts = await prisma.product.findMany({
     where: {
       featured: true,
