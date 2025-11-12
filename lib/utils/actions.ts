@@ -11,7 +11,6 @@ import {
 } from "./schemas";
 import { deleteImage, uploadImage } from "./supabase";
 import { revalidatePath } from "next/cache";
-import { boolean } from "zod";
 // getAuthUser() to avoid rpetation, get current user and if no user we redirect
 const getAuthUser = async () => {
   const user = await currentUser();
@@ -286,7 +285,7 @@ export const deleteReviewAction = async (prevState: { reviewId: string }) => {
   }
 };
 export const findExistingReview = async (userId: string, productId: string) => {
-  return await prisma.review.findMany({
+  return await prisma.review.findFirst({
     where: {
       clerkId: userId,
       productId,
