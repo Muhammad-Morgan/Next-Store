@@ -7,7 +7,9 @@ import { Product } from "@prisma/client";
 async function FeaturedProducts() {
   const featuredProducts: Product[] = await fetchFeaturedProducts();
 
-  if (featuredProducts.length === 0) return <EmtpyList />;
+  if (featuredProducts.length === 0) {
+    return <EmtpyList />;
+  }
   return (
     <section className="pt-24">
       <SectionTitle text="featured products" />
